@@ -38,8 +38,10 @@ import tkMessageBox
 import time
 import math
 
-defaultInterval = 20 * 60
-warnInterval = 5 * 60
+import argparse
+
+defaultInterval = 12 * 60
+warnInterval = 1 * 60
 
 _VERSION = "1.0"
 _BG = "blue"
@@ -56,6 +58,16 @@ endTime = time.time() + defaultInterval
 prefixBuffer = 0  # buffers whatever gets input on the keyboard
 prefixBufferExpires = time.time()  # time when the prefixBuffer will be cleared
 last_draw_parameters = None
+
+
+def set_intervals(newDefaultInterval, newWarnInterval):
+    global defaultInterval, warnInterval, endTime
+
+    defaultInterval = newDefaultInterval
+    warnInterval = newWarnInterval
+    # recompute endTime
+    endTime = time.time() + defaultInterval
+
 
 root = None
 c = None
@@ -274,8 +286,17 @@ def tick():
     root.after(100, tick)
 
 def main():
-    global root, c
-    
+    global root, c, defaultInterval
+
+    parser = argparse.ArgumentParser(description='Simple countdown.')
+    parser.add_argument('--time', default=12, type=int, help='the number of minutes to set for the countdown')
+    parser.add_argument('--warn', default=1, type=int, help='the number of minutes from when warning will be enabled')
+    args = parser.parse_args()
+
+    print "Time: %d\n" % (args.time)
+    defaultInterval = args.time * 60
+    set_intervals(args.time * 60, args.warn * 60)
+
     root = Tkinter.Tk()
     root.title("papertimer %s" % (_VERSION))
     w = root.winfo_screenwidth()
