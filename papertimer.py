@@ -44,14 +44,16 @@ defaultInterval = 12 * 60
 warnInterval = 1 * 60
 
 _VERSION = "1.0"
-_BG = "blue"
-_BGOUT = "red"
-_FG = "white"
-_FGWARN = "red"
+_BG = "black" # regular bg color
+_BGOUT = "black" # bg color when out of time
+_FG = "white" # regular foreground color
+_FGWARN = "red" # foreground color when less than 2 mins
+_FGOUT = "red" # foreground color when out of time
 _DIGITWIDTH = 32*1.5
 _DIGITHEIGHT = 32*2*1.5
 _SEGMENTWIDTH = _DIGITWIDTH / 6.0
 _DIGITSPACING = _SEGMENTWIDTH
+
 
 pausedAt = None
 endTime = time.time() + defaultInterval
@@ -138,13 +140,22 @@ def draw_number(c, x, y, w, h, segmentwidth, number, fg):
         draw_digit(c, x, y, w, h, segmentwidth, str(digit1), fg)
         draw_digit(c, x + w + _DIGITSPACING, y, w, h, segmentwidth, str(digit2), fg)
 
-def draw_time(c, x, y, seconds, drawColon=True, warn=False):
+def draw_time(c, x, y, seconds, drawColon=True, warn=False, out=False, mod2=False):
+#    print("draw_time: %d" % seconds)
     seconds = int(seconds)
     minutes = seconds / 60
     seconds = seconds % 60
-    draw_number(c, x, y, _DIGITWIDTH, _DIGITHEIGHT, _SEGMENTWIDTH, minutes, fg=(_FG, _FGWARN)[warn])
-    if drawColon: draw_number(c, x + 2 * _DIGITWIDTH + 2 * _DIGITSPACING, 0.4*_DIGITHEIGHT+y, 0.6*_DIGITWIDTH, 0.6*_DIGITHEIGHT, 0.6*_SEGMENTWIDTH, ":", fg=(_FG, _FGWARN)[warn])
-    draw_number(c, x + 2 * _DIGITWIDTH + 3 * _DIGITSPACING + 0.6*_DIGITSPACING, 0.4*_DIGITHEIGHT+y, 0.6*_DIGITWIDTH, 0.6*_DIGITHEIGHT, 0.8*_SEGMENTWIDTH, seconds, fg=(_FG, _FGWARN)[warn])
+
+    fg = (_FG, _FGWARN)[warn]
+    if out:
+        if mod2:
+            fg = _FGOUT
+        else:
+            fg = _BG
+
+    draw_number(c, x, y, _DIGITWIDTH, _DIGITHEIGHT, _SEGMENTWIDTH, minutes, fg=fg)
+    if drawColon: draw_number(c, x + 2 * _DIGITWIDTH + 2 * _DIGITSPACING, 0.4*_DIGITHEIGHT+y, 0.6*_DIGITWIDTH, 0.6*_DIGITHEIGHT, 0.6*_SEGMENTWIDTH, ":", fg=fg)
+    draw_number(c, x + 2 * _DIGITWIDTH + 3 * _DIGITSPACING + 0.6*_DIGITSPACING, 0.4*_DIGITHEIGHT+y, 0.6*_DIGITWIDTH, 0.6*_DIGITHEIGHT, 0.8*_SEGMENTWIDTH, seconds, fg=fg)
 
 def OnPressSpace(event):
     global pausedAt, endTime
@@ -268,17 +279,23 @@ def draw(force = False):
         #if int(remainingTime * 2) % 2 != 0:
         warn = True
 
-    seconds = max(0, math.ceil(remainingSeconds/10.0)*10)
+    out = False
+    if remainingSeconds <= 0:
+        out = True
+
+#    seconds = max(0, math.ceil(remainingSeconds/10.0)*10)
+    seconds = max(0, math.ceil(remainingSeconds))
     colon = (remainingSeconds % 2 == 0) or (pausedAt != None)
     bgcolor = _BG
-    if remainingSeconds <= 0 and remainingSeconds % 2 == 0:
-        bgcolor = _BGOUT
+
+    # if remainingSeconds <= 0 and remainingSeconds % 2 == 0:
+    #     bgcolor = _BGOUT
 
     draw_parameters = (x, y, seconds, colon, warn, bgcolor)
     if draw_parameters != last_draw_parameters or force:
         c.delete(Tkinter.ALL)
         c.config(bg = bgcolor)
-        draw_time(c, x, y, seconds=seconds, drawColon=colon, warn=warn)
+        draw_time(c, x, y, seconds=seconds, drawColon=colon, warn=warn, out=out, mod2=(remainingSeconds % 2 == 0))
         last_draw_parameters = draw_parameters
 
 def tick():
