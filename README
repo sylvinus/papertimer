@@ -5,7 +5,17 @@ Copyright (C) 2009-2011 Christoph Sommer <mail@christoph-sommer.de>
 Uses python and Tkinter to display a simple full-screen countdown timer
 for session chairs and presentations. Run as follows:
 
-./papertimer.py
+usage: papertimer.py [-h] [--time TIME] [--warn WARN]
 
-Press <F1> or 'h' for help.
+Simple countdown.
 
+optional arguments:
+  -h, --help   show this help message and exit
+  --time TIME  the number of minutes to set for the countdown
+  --warn WARN  the number of minutes from when warning will be enabled
+
+When the countdown is running :
+ - press ENTER to get back to reset the countdown
+ - press SPACE to pause/unpause
+ - press +/- to add/remove 1 minute
+ - press ESC to quit
